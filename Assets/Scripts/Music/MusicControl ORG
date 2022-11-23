@@ -1,0 +1,78 @@
+﻿using UnityEngine;
+using System.Collections;
+using UnityEngine.SceneManagement;
+
+public class MusicControl : MonoBehaviour
+{
+    AudioSource[] audiosource;
+    LowPass lowpass;
+    HighPass highpass;
+    public GCscrew gCscrew;
+    int startHighCutoff;
+    float lerpT = 0.0f;
+    public int currentSong;
+    public OptionsSet options;
+
+    void Awake()
+    {
+    }
+
+    void Start ()
+    {
+        currentSong = 0;
+        audiosource = GetComponents<AudioSource>();
+        if (options.setEffects)
+        {
+            lowpass = GetComponent<LowPass>();
+            highpass = GetComponent<HighPass>();
+        }
+	}
+	
+	void Update ()
+    {
+        if (options.setEffects)
+        {
+            lowpass.enabled = true;
+            highpass.enabled = true;
+
+            if (gCscrew.bonusFill <= 70)
+            {
+                highpass.cutoff = Mathf.MoveTowards(highpass.cutoff, 100, 2000 * Time.deltaTime);
+                //highpass.cutoff = Mathf.Lerp(highpass.cutoff, 100, lerpT);
+                //lerpT += 0.01f * Time.deltaTime;
+            }
+            else if (gCscrew.bonusFill <= 80)
+            {
+                highpass.cutoff = Mathf.MoveTowards(highpass.cutoff, 1000, 400 * Time.deltaTime);
+            }
+            else if (gCscrew.bonusFill <= 90)
+            {
+                highpass.cutoff = Mathf.MoveTowards(highpass.cutoff, 2000, 400 * Time.deltaTime);
+            }
+            if (gCscrew.bonus == 0)
+            {
+                lowpass.cutoff = Mathf.MoveTowards(lowpass.cutoff, 1000, 10000 * Time.deltaTime);
+            }
+            else
+            {
+                lowpass.cutoff = Mathf.MoveTowards(lowpass.cutoff, 20000, 10000 * Time.deltaTime);
+            }
+        }
+        
+        MusicChange();
+    }
+
+    void MusicChange()
+    {
+        if(!audiosource[currentSong].isPlaying)
+        {
+            currentSong++;
+            if (audiosource.GetLength(0) == currentSong)
+            {
+                currentSong = 0;
+            }
+            audiosource[currentSong].Play();
+        }
+    }
+}
+

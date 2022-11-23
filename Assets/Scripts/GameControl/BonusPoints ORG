@@ -1,0 +1,126 @@
+﻿using UnityEngine;
+using System.Collections;
+
+public class BonusPoints : MonoBehaviour
+{
+    GCscrew gCscrew;
+    int previousScore,previousScrews=0,previousBonus,previousXBonus=0;
+    public float[] bonusSetup;
+    float depleteRate = 1;
+    public float previewDepleteRateCheck;
+    public float deplateRateSetup;
+    bool xbonusStarted = false;
+    int lastXbonus;
+    public HSFile saveScore;
+
+    void Start()
+    {
+        gCscrew = GetComponent<GCscrew>();
+        gCscrew.bonusFill = 40;
+        previousScore = gCscrew.score;
+        
+    }
+
+    void Update()
+    {
+
+        XBonus();
+
+        if (!gCscrew.paused && !gCscrew.devStaticBonus || gCscrew.xBonus==1 )    //pauza, dev, xbonus aktywny
+        {
+            if(gCscrew.screws > 1)
+             Deplete();
+
+
+            if ((gCscrew.bonusFill > 90) && (gCscrew.bonus != 5))
+            {
+                gCscrew.bonus++;
+                gCscrew.bonusFill = 10;
+            }
+            else if ((gCscrew.bonusFill > 90) && (gCscrew.bonus == 5))
+            {
+                gCscrew.bonusFill = 90;
+            }
+            else if (gCscrew.bonusFill < 0)
+            {
+                gCscrew.bonus--;
+                if(gCscrew.bonus==-1)
+                {
+                    gCscrew.fail = true;
+                }
+                gCscrew.bonusFill = 10;
+            }
+            if (previousScore != gCscrew.score)
+            {
+                gCscrew.bonusFill += 10;
+            }
+            if(gCscrew.pass&&gCscrew.bonus==0)
+            {
+                gCscrew.bonusFill += 10;
+            }
+            if(gCscrew.fail)
+            {
+
+                gCscrew.bonus--;
+                gCscrew.bonusFill = 10;
+                if(gCscrew.bonus<0)
+                {
+                    gCscrew.Pause();
+                    gCscrew.lost = true;
+                    saveScore.SaveScores(gCscrew.score+gCscrew.screws);
+                }
+            }
+            previousScore = gCscrew.score;
+        }
+    }
+    
+    void Deplete()
+    {
+        
+        previewDepleteRateCheck = ((++depleteRate*depleteRate+bonusSetup[gCscrew.bonus]) * Time.deltaTime)/ deplateRateSetup;
+        gCscrew.bonusFill -= previewDepleteRateCheck;
+
+        if(previousScrews!=gCscrew.screws)
+        {
+            depleteRate = 1;
+        }
+        previousScrews = gCscrew.screws;
+    }
+    
+    void XBonus()
+    {
+
+        
+        if (gCscrew.xBonus == 0 && !xbonusStarted)
+        {
+            previousBonus = gCscrew.bonus;
+        }
+        else if(gCscrew.xBonus==0 && xbonusStarted)
+        {
+            if(previousXBonus==3)
+            {
+                gCscrew.bonus /= 3;
+            }
+            else if(previousXBonus==4)
+            {
+                gCscrew.bonus /= 2;
+            }
+            xbonusStarted = false;
+        }
+        if(gCscrew.xBonus==3)
+        {
+            gCscrew.bonus = previousBonus * 3;
+            xbonusStarted = true;
+        }
+        if (gCscrew.xBonus == 4)
+        {
+            gCscrew.bonus = previousBonus * 2;
+            xbonusStarted = true;
+        }
+
+
+
+        previousXBonus = gCscrew.xBonus;
+        
+    }
+}
